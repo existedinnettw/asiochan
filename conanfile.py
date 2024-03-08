@@ -1,26 +1,19 @@
 import re
+# from conans import CMake, ConanFile, tools
 
-from conans import CMake, ConanFile, tools
-
-
-def get_version():
-    try:
-        content = tools.load("CMakeLists.txt")
-        version = re.search("set\\(ASIOCHAN_VERSION (.*)\\)", content).group(1)
-        return version.strip()
-    except OSError:
-        return None
-
-
+from conan import ConanFile
+from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
+from conan.tools.build import can_run, check_min_cppstd
+# from conan.tools.files import load
+    
 class AsioChan(ConanFile):
     name = "asiochan"
-    version = get_version()
+    version = "0.4.3"
     revision_mode = "scm"
     description = "C++20 coroutine channels for ASIO"
     homepage = "https://github.com/MiSo1289/asiochan"
     url = "https://github.com/MiSo1289/asiochan"
     license = "MIT"
-    generators = "cmake"
     settings = ("os", "compiler", "arch", "build_type")
     exports_sources = (
         "examples/*",
@@ -28,38 +21,46 @@ class AsioChan(ConanFile):
         "tests/*",
         "CMakeLists.txt",
     )
-    build_requires = (
-        # Unit-test framework
-        "catch2/2.13.3",
-    )
     options = {
         "asio": ["boost", "standalone"]
     }
     default_options = {
         "asio": "boost",
     }
+    no_copy_source = True
+
+    def validate(self):
+        check_min_cppstd(self, "20")
 
     def requirements(self):
+        self.test_requires("catch2/2.13.7")
         if self.options.asio == "boost":
-            self.requires("boost/1.75.0")
+            self.requires("boost/1.84.0")
         else:
-            self.requires("asio/1.18.1")
+            self.requires("asio/[>=1.18.1 <=1.29.0]")
+
+    def generate(self):
+        deps = CMakeDeps(self)
+        deps.generate()
+        tc = CMakeToolchain(self)
+        if self.options.asio == "standalone" :
+            tc.variables["WITH_IGH"] = True
+            tc.variables["ASIOCHAN_USE_STANDALONE_ASIO"]=True
+        tc.generate()
 
     def build(self):
         cmake = CMake(self)
-        cmake.definitions["ASIOCHAN_USE_STANDALONE_ASIO"] = self.options.asio == "standalone"
-
         cmake.configure()
         cmake.build()
 
-        if tools.get_env("CONAN_RUN_TESTS", True):
+        if (not self.conf.get("tools.build:skip_test", default=False)) and can_run(self):
             cmake.test()
 
     def package(self):
         self.copy("*.hpp", dst="include", src="include")
 
     def package_id(self):
-        self.info.header_only()
+        self.info.clear()
 
     def package_info(self):
         if self.options.asio == "standalone":

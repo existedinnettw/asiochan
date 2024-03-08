@@ -1,3 +1,6 @@
+
+find_package(Catch2 REQUIRED CONFIG)
+
 add_executable(asiochan_tests)
 add_test(
   NAME asiochan_tests
@@ -14,7 +17,8 @@ target_link_libraries(
   asiochan_tests
 
   PRIVATE
-  CONAN_PKG::catch2
+  Catch2::Catch2
+  # Catch2::Catch2WithMain
   Threads::Threads
   asiochan::asiochan
 )

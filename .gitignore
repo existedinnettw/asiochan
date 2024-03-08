@@ -8,3 +8,4 @@ build
 build-*
 cmake-build-*
 out
+*Presets.json

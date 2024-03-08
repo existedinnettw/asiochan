@@ -21,18 +21,15 @@ if (ASIOCHAN_USE_STANDALONE_ASIO)
   target_compile_definitions(asiochan INTERFACE ASIOCHAN_USE_STANDALONE_ASIO)
 endif()
 
-# Building the tests and examples requires Conan packages
-set(CONAN_BUILD_INFO_PATH "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
-if (EXISTS "${CONAN_BUILD_INFO_PATH}")
-  include("${CONAN_BUILD_INFO_PATH}")
-  conan_basic_setup(TARGETS)
+if (ASIOCHAN_USE_STANDALONE_ASIO)
+  find_package(asio REQUIRED CONFIG)
+  target_link_libraries(asiochan INTERFACE asio::asio)
+else()
+  find_package(Boost REQUIRED)
+  target_link_libraries(asiochan INTERFACE Boost::headers)
+endif()
 
-  if (ASIOCHAN_USE_STANDALONE_ASIO)
-    target_link_libraries(asiochan INTERFACE CONAN_PKG::asio)
-  else()
-    target_link_libraries(asiochan INTERFACE CONAN_PKG::boost)
-  endif()
-
+if (NOT BUILD_TESTING STREQUAL OFF)
   find_package(Threads REQUIRED)
   enable_testing()
 

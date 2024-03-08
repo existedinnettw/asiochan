@@ -1,15 +1,11 @@
-import re
-# from conans import CMake, ConanFile, tools
-
+from conan.tools.files import copy
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
 from conan.tools.build import can_run, check_min_cppstd
-# from conan.tools.files import load
     
 class AsioChan(ConanFile):
     name = "asiochan"
     version = "0.4.3"
-    revision_mode = "scm"
     description = "C++20 coroutine channels for ASIO"
     homepage = "https://github.com/MiSo1289/asiochan"
     url = "https://github.com/MiSo1289/asiochan"
@@ -39,6 +35,9 @@ class AsioChan(ConanFile):
         else:
             self.requires("asio/[>=1.18.1 <=1.29.0]")
 
+    def layout(self):
+        cmake_layout(self)
+
     def generate(self):
         deps = CMakeDeps(self)
         deps.generate()
@@ -57,11 +56,13 @@ class AsioChan(ConanFile):
             cmake.test()
 
     def package(self):
-        self.copy("*.hpp", dst="include", src="include")
+        copy(self, "*.hpp", self.source_folder, self.package_folder)
 
     def package_id(self):
         self.info.clear()
 
     def package_info(self):
+        self.cpp_info.bindirs = []
+        self.cpp_info.libdirs = []
         if self.options.asio == "standalone":
             self.cpp_info.defines = ["ASIOCHAN_USE_STANDALONE_ASIO"]

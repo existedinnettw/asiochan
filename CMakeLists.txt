@@ -33,6 +33,6 @@ if (NOT BUILD_TESTING STREQUAL OFF)
   find_package(Threads REQUIRED)
   enable_testing()
 
-  add_subdirectory(examples)
+  add_subdirectory(examples EXCLUDE_FROM_ALL)
   add_subdirectory(tests)
 endif()
